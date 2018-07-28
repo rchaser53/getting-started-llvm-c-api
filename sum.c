@@ -55,19 +55,24 @@ int main(int argc, char const *argv[]) {
         fprintf(stderr, "usage: %s x y\n", argv[0]);
         exit(EXIT_FAILURE);
     }
+
     long long x = strtoll(argv[1], NULL, 10);
     long long y = strtoll(argv[2], NULL, 10);
 
     LLVMGenericValueRef args[] = {
-        LLVMCreateGenericValueOfInt(LLVMInt32Type(), x, 0),
-        LLVMCreateGenericValueOfInt(LLVMInt32Type(), y, 0)
+      LLVMCreateGenericValueOfInt(LLVMInt32Type(), x, 0),
+      LLVMCreateGenericValueOfInt(LLVMInt32Type(), y, 0)
     };
-    LLVMGenericValueRef res = LLVMRunFunction(engine, sum, 2, args);
-    printf("%d\n", (int)LLVMGenericValueToInt(res, 0));
+    // LLVMGenericValueRef res = LLVMRunFunction(engine, sum, 2, args);
+    uint64_t res = LLVMGetFunctionAddress(engine, "sum");
+    // printf("%d\n", (int)LLVMGenericValueToInt(res, 0));
+
+    LLVMGenericValueRef testX = LLVMCreateGenericValueOfInt(LLVMInt32Type(), x, 0);
+    printf("%d\n", (int)LLVMGenericValueToInt(testX, 0));
 
     // Write out bitcode to file
     if (LLVMWriteBitcodeToFile(mod, "sum.bc") != 0) {
-        fprintf(stderr, "error writing bitcode to file, skipping\n");
+      fprintf(stderr, "error writing bitcode to file, skipping\n");
     }
 
     LLVMDisposeBuilder(builder);
