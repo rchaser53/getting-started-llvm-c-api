@@ -38,6 +38,9 @@ int main(int argc, char const *argv[]) {
     error = NULL;
     LLVMLinkInMCJIT();
     LLVMInitializeNativeTarget();
+    LLVMInitializeX86AsmPrinter();
+    LLVMInitializeX86Disassembler();
+
     if (LLVMCreateExecutionEngineForModule(&engine, mod, &error) != 0) {
         fprintf(stderr, "failed to create execution engine\n");
         abort();
