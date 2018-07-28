@@ -17,64 +17,64 @@
 #include <stdlib.h>
 
 int main(int argc, char const *argv[]) {
-    LLVMModuleRef mod = LLVMModuleCreateWithName("my_module");
+  LLVMModuleRef mod = LLVMModuleCreateWithName("my_module");
 
-    LLVMTypeRef param_types[] = { LLVMInt32Type(), LLVMInt32Type() };
-    LLVMTypeRef ret_type = LLVMFunctionType(LLVMInt32Type(), param_types, 2, 0);
-    LLVMValueRef sum = LLVMAddFunction(mod, "sum", ret_type);
+  LLVMTypeRef param_types[] = { LLVMInt32Type(), LLVMInt32Type() };
+  LLVMTypeRef ret_type = LLVMFunctionType(LLVMInt32Type(), param_types, 2, 0);
+  LLVMValueRef sum = LLVMAddFunction(mod, "sum", ret_type);
 
-    LLVMBasicBlockRef entry = LLVMAppendBasicBlock(sum, "entry");
+  LLVMBasicBlockRef entry = LLVMAppendBasicBlock(sum, "entry");
 
-    LLVMBuilderRef builder = LLVMCreateBuilder();
-    LLVMPositionBuilderAtEnd(builder, entry);
-    LLVMValueRef tmp = LLVMBuildAdd(builder, LLVMGetParam(sum, 0), LLVMGetParam(sum, 1), "tmp");
-    LLVMBuildRet(builder, tmp);
+  LLVMBuilderRef builder = LLVMCreateBuilder();
+  LLVMPositionBuilderAtEnd(builder, entry);
+  LLVMValueRef tmp = LLVMBuildAdd(builder, LLVMGetParam(sum, 0), LLVMGetParam(sum, 1), "tmp");
+  LLVMBuildRet(builder, tmp);
 
-    char *error = NULL;
-    LLVMVerifyModule(mod, LLVMAbortProcessAction, &error);
+  char *error = NULL;
+  LLVMVerifyModule(mod, LLVMAbortProcessAction, &error);
+  LLVMDisposeMessage(error);
+
+  LLVMExecutionEngineRef engine;
+  error = NULL;
+  LLVMLinkInMCJIT();
+  LLVMInitializeNativeTarget();
+  LLVMInitializeX86AsmPrinter();
+  LLVMInitializeX86Disassembler();
+
+  if (LLVMCreateExecutionEngineForModule(&engine, mod, &error) != 0) {
+    fprintf(stderr, "failed to create execution engine\n");
+    abort();
+  }
+  if (error) {
+    fprintf(stderr, "error: %s\n", error);
     LLVMDisposeMessage(error);
+    exit(EXIT_FAILURE);
+  }
 
-    LLVMExecutionEngineRef engine;
-    error = NULL;
-    LLVMLinkInMCJIT();
-    LLVMInitializeNativeTarget();
-    LLVMInitializeX86AsmPrinter();
-    LLVMInitializeX86Disassembler();
+  if (argc < 3) {
+    fprintf(stderr, "usage: %s x y\n", argv[0]);
+    exit(EXIT_FAILURE);
+  }
 
-    if (LLVMCreateExecutionEngineForModule(&engine, mod, &error) != 0) {
-        fprintf(stderr, "failed to create execution engine\n");
-        abort();
-    }
-    if (error) {
-        fprintf(stderr, "error: %s\n", error);
-        LLVMDisposeMessage(error);
-        exit(EXIT_FAILURE);
-    }
+  long long x = strtoll(argv[1], NULL, 10);
+  long long y = strtoll(argv[2], NULL, 10);
 
-    if (argc < 3) {
-        fprintf(stderr, "usage: %s x y\n", argv[0]);
-        exit(EXIT_FAILURE);
-    }
+  LLVMGenericValueRef args[] = {
+    LLVMCreateGenericValueOfInt(LLVMInt32Type(), x, 0),
+    LLVMCreateGenericValueOfInt(LLVMInt32Type(), y, 0)
+  };
 
-    long long x = strtoll(argv[1], NULL, 10);
-    long long y = strtoll(argv[2], NULL, 10);
+  int (*func_pointer)(int, int) = LLVMGetFunctionAddress(engine, "sum");
+  printf("%d\n", func_pointer(x, y));
 
-    LLVMGenericValueRef args[] = {
-      LLVMCreateGenericValueOfInt(LLVMInt32Type(), x, 0),
-      LLVMCreateGenericValueOfInt(LLVMInt32Type(), y, 0)
-    };
-    // LLVMGenericValueRef res = LLVMRunFunction(engine, sum, 2, args);
-    uint64_t res = LLVMGetFunctionAddress(engine, "sum");
-    // printf("%d\n", (int)LLVMGenericValueToInt(res, 0));
+  // Write out bitcode to file
+  if (LLVMWriteBitcodeToFile(mod, "sum.bc") != 0) {
+    fprintf(stderr, "error writing bitcode to file, skipping\n");
+  }
 
-    LLVMGenericValueRef testX = LLVMCreateGenericValueOfInt(LLVMInt32Type(), x, 0);
-    printf("%d\n", (int)LLVMGenericValueToInt(testX, 0));
-
-    // Write out bitcode to file
-    if (LLVMWriteBitcodeToFile(mod, "sum.bc") != 0) {
-      fprintf(stderr, "error writing bitcode to file, skipping\n");
-    }
-
-    LLVMDisposeBuilder(builder);
-    LLVMDisposeExecutionEngine(engine);
+  LLVMDisposeBuilder(builder);
+  LLVMDisposeExecutionEngine(engine);
 }
+
+    // LLVMGenericValueRef testX = LLVMCreateGenericValueOfInt(LLVMInt32Type(), x, 0);
+    // printf("%d\n", (int)LLVMGenericValueToInt(testX, 0));
