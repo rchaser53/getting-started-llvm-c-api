@@ -59,12 +59,8 @@ int main(int argc, char const *argv[]) {
   long long x = strtoll(argv[1], NULL, 10);
   long long y = strtoll(argv[2], NULL, 10);
 
-  LLVMGenericValueRef args[] = {
-    LLVMCreateGenericValueOfInt(LLVMInt32Type(), x, 0),
-    LLVMCreateGenericValueOfInt(LLVMInt32Type(), y, 0)
-  };
-
-  int (*func_pointer)(int, int) = LLVMGetFunctionAddress(engine, "sum");
+  int (*func_pointer)(int, int);
+  func_pointer = (int (*)(int, int))LLVMGetFunctionAddress(engine, "sum");
   printf("%d\n", func_pointer(x, y));
 
   // Write out bitcode to file
@@ -76,5 +72,5 @@ int main(int argc, char const *argv[]) {
   LLVMDisposeExecutionEngine(engine);
 }
 
-    // LLVMGenericValueRef testX = LLVMCreateGenericValueOfInt(LLVMInt32Type(), x, 0);
-    // printf("%d\n", (int)LLVMGenericValueToInt(testX, 0));
+// LLVMGenericValueRef testX = LLVMCreateGenericValueOfInt(LLVMInt32Type(), x, 0);
+// printf("%d\n", (int)LLVMGenericValueToInt(testX, 0));
