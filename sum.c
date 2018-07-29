@@ -63,6 +63,7 @@ int main(int argc, char const *argv[]) {
   func_pointer = (int (*)(int, int))LLVMGetFunctionAddress(engine, "sum");
   printf("%d\n", func_pointer(x, y));
 
+  LLVMDumpModule(mod);
   // Write out bitcode to file
   if (LLVMWriteBitcodeToFile(mod, "sum.bc") != 0) {
     fprintf(stderr, "error writing bitcode to file, skipping\n");
