@@ -76,3 +76,10 @@ int main(int argc, char const *argv[]) {
 // LLVMGenericValueRef testX = LLVMCreateGenericValueOfInt(LLVMInt32Type(), x, 0);
 // printf("%d\n", (int)LLVMGenericValueToInt(testX, 0));
   // LLVMValueRef aaa = LLVMAddGlobalInAddressSpace(mod, LLVMArrayType(LLVMInt8Type(), 6), "nyan", 6);
+
+  // LLVMValueRef GlobalVar = LLVMAddGlobal(mod, LLVMInt32Type(), "simple_value");
+  // LLVMSetInitializer(GlobalVar, LLVMConstInt(LLVMInt32Type(), 42, 0));
+
+  // uint64_t raw = LLVMGetGlobalValueAddress(engine, "simple_value");
+  // int32_t *usable  = (int32_t *) raw;
+  // printf("%d\n", *usable);
